@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
 import { CheckBox } from 'react-native-elements';
 
 export default function SignUp({ navigation }) {
@@ -7,7 +7,36 @@ export default function SignUp({ navigation }) {
   const [pw, setPw] = useState('');
   const [num, setNum] = useState('');
   const [mw, setMw] = useState('');
-  
+  const [age, setAge] = useState('');
+
+  const handleSignUp = () => {
+    {
+      if(!id) {
+        Alert.alert("오류", "ID를 입력하지 않았습니다.");
+        return;
+      }
+      if(!pw) {
+        Alert.alert("오류", "비밀번호를 입력하지 않았습니다.");
+        return;
+      }   
+      if(!num){
+        Alert.alert("오류", "전화번호를 입력하지 않았습니다.");
+        return;
+      }     
+      if(!mw){
+        Alert.alert("오류", "성별을 체크하지 않았습니다.");
+        return;
+      }
+    }
+    Alert.alert(
+      "회원가입 완료",
+      "가입을 축하합니다! 다시 로그인해주세요.",
+      [
+        { text: "OK", onPress: () => navigation.navigate('Login') }
+      ]
+    );
+  }
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
     <View style={styles.container}>
@@ -30,10 +59,19 @@ export default function SignUp({ navigation }) {
 
       <Text style={{fontSize: 18}}>전화번호를 입력해주세요.</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input,{ marginBottom: 30}]}
         value={num}
         onChangeText={(text) => setNum(text)}
         placeholder="전화번호"
+        keyboardType="number-pad"
+      />
+
+      <Text style={{fontSize: 18}}>나이를 입력해주세요.</Text>
+      <TextInput
+        style={styles.input}
+        value={age}
+        onChangeText={(text) => setAge(text)}
+        placeholder="나이"
         keyboardType="number-pad"
       />
 
@@ -58,7 +96,7 @@ export default function SignUp({ navigation }) {
             />
         </View>
 
-      <TouchableOpacity style={styles.login}>
+      <TouchableOpacity style={styles.login} onPress={()=>handleSignUp()}>
           <Text style={{ color: 'white', fontSize: 16 }}>회원가입하기</Text>
       </TouchableOpacity>
     </View>
