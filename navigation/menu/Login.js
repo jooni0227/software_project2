@@ -34,11 +34,12 @@ export default function Login({ navigation }) {
             font-family: 'yg-jalnan';
             text-align: center; /* 텍스트를 수평으로 중앙 정렬 */
             background-color: #F5A9A9;
+            overflow:hidden;
           }
         </style>
       </head>
       <body>
-        <div style="font-size: 110px; margin-top: 160px; color:white;">오늘 뭐 입지?</div>
+        <div style="font-size: 120px; margin-top: 230px; color:white;">오늘 뭐 입지?</div>
       </body>
       </html>
     `;
@@ -52,7 +53,7 @@ export default function Login({ navigation }) {
         />
       </View>
       <View style={styles.bottomContainer}>
-        <Text style={{ fontSize: 18, marginTop:25}}>ID</Text>
+        <Text style={{ fontSize: 18, marginTop:10}}>ID</Text>
         <TextInput
           style={styles.input_id}
           value={id}
@@ -88,7 +89,7 @@ const styles = StyleSheet.create({
     borderColor:'#F5A9A9',
   },
   topContainer: {
-    flex: 3, // 위쪽 영역의 높이 비율을 3으로 설정
+    flex: 4, // 위쪽 영역의 높이 비율을 3으로 설정
     borderWidth:1,
     borderColor:'#F5A9A9'
   },  
