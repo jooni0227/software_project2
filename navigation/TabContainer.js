@@ -15,7 +15,7 @@ const Tab=createBottomTabNavigator();
 export default function TabContainer(){
     return (
         <Tab.Navigator
-            initialRouteName={home}>
+            initialRouteName={login}>
             <Tab.Screen name={home} component={Home} options={{}}/>
             <Tab.Screen name={vote} component={Vote} options={{}} />
             <Tab.Screen name={login} component={Login} options={{}}/>
