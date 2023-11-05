@@ -30,6 +30,7 @@ export default function SignUp({ navigation }) {
         const usersRef = ref(db, 'users/' + user.uid);
         set(usersRef, {
           id,
+          pw,
           age,
           gender: mw,
         });
