@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
 import { CheckBox } from 'react-native-elements';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { ref, set } from 'firebase/database';
+import { db, auth } from './firebaseConfig';
+
+
 
 export default function SignUp({ navigation }) {
   const [id, setId] = useState('');
@@ -10,39 +15,46 @@ export default function SignUp({ navigation }) {
   const [age, setAge] = useState('');
 
   const handleSignUp = () => {
-    {
-      if(!id) {
-        Alert.alert("오류", "ID를 입력하지 않았습니다.");
-        return;
-      }
-      if(!pw) {
-        Alert.alert("오류", "비밀번호를 입력하지 않았습니다.");
-        return;
-      }   
-      if(!num){
-        Alert.alert("오류", "전화번호를 입력하지 않았습니다.");
-        return;
-      }     
-      if(!mw){
-        Alert.alert("오류", "성별을 체크하지 않았습니다.");
-        return;
-      }
+    if (!id || !pw || !num || !mw || !age) {
+      Alert.alert("오류", "모든 필수 항목을 입력하세요.");
+      return;
     }
-    Alert.alert(
-      "회원가입 완료",
-      "가입을 축하합니다! 다시 로그인해주세요.",
-      [
-        { text: "OK", onPress: () => navigation.navigate('Login') }
-      ]
-    );
+
+    // Firebase Authentication에서 사용자 생성
+    createUserWithEmailAndPassword(auth, id, pw)
+      .then((userCredential) => {
+        // 사용자 등록이 성공하면
+        const user = userCredential.user;
+
+        // Firebase 실시간 데이터베이스에 추가 사용자 데이터 저장
+        const usersRef = ref(db, 'users/' + user.uid);
+        set(usersRef, {
+          id,
+          age,
+          gender: mw,
+        });
+
+        Alert.alert(
+          '회원 가입이 완료되었습니다',
+          '가입을 축하드립니다! 다시 로그인하세요.',
+          [
+            { text: '확인', onPress: () => navigation.navigate('Login') },
+          ]
+        );
+      })
+      .catch((error) => {
+        Alert.alert('오류', error.message);
+      });
   }
+  
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
     <View style={styles.container}>
+      <Text style={styles.join}>회원가입 페이지{'\n'}</Text>
       <Text style={{fontSize: 18}}>사용하실 ID를 입력해주세요.</Text>
       <TextInput
-        style={[styles.input,{ marginBottom: 30}]}
+        style={[styles.input, { marginBottom: 30 }]}
         value={id}
         onChangeText={(text) => setId(text)}
         placeholder="아이디"
@@ -50,7 +62,7 @@ export default function SignUp({ navigation }) {
       
       <Text style={{fontSize: 18}}>사용하실 PW를 입력해주세요.</Text>
       <TextInput
-        style={[styles.input,{ marginBottom: 30}]}
+        style={[styles.input, { marginBottom: 30 }]}
         value={pw}
         onChangeText={(text) => setPw(text)}
         placeholder="비밀번호"
@@ -59,7 +71,7 @@ export default function SignUp({ navigation }) {
 
       <Text style={{fontSize: 18}}>전화번호를 입력해주세요.</Text>
       <TextInput
-        style={[styles.input,{ marginBottom: 30}]}
+        style={[styles.input, { marginBottom: 30 }]}
         value={num}
         onChangeText={(text) => setNum(text)}
         placeholder="전화번호"
@@ -96,7 +108,7 @@ export default function SignUp({ navigation }) {
             />
         </View>
 
-      <TouchableOpacity style={styles.login} onPress={()=>handleSignUp()}>
+      <TouchableOpacity style={styles.login} onPress={() => handleSignUp()}>
           <Text style={{ color: 'white', fontSize: 16 }}>회원가입하기</Text>
       </TouchableOpacity>
     </View>
@@ -120,6 +132,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 15,
     backgroundColor: 'white',
+   },
+   join:{
+    fontSize: 33,
+    color: '#F5A9A9',
+    textAlign: 'center',
    },
    login:{
     width: 300,
