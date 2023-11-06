@@ -10,12 +10,12 @@ import { db, auth } from './firebaseConfig';
 export default function SignUp({ navigation }) {
   const [id, setId] = useState('');
   const [pw, setPw] = useState('');
-  const [num, setNum] = useState('');
+  const [nick, setNick] = useState('');
   const [mw, setMw] = useState('');
   const [age, setAge] = useState('');
 
   const handleSignUp = () => {
-    if (!id || !pw || !num || !mw || !age) {
+    if (!id || !pw || !nick || !mw || !age) {
       Alert.alert("오류", "모든 필수 항목을 입력하세요.");
       return;
     }
@@ -32,6 +32,7 @@ export default function SignUp({ navigation }) {
           id,
           pw,
           age,
+          nick,
           gender: mw,
         });
 
@@ -58,25 +59,25 @@ export default function SignUp({ navigation }) {
         style={[styles.input, { marginBottom: 30 }]}
         value={id}
         onChangeText={(text) => setId(text)}
-        placeholder="아이디"
+        placeholder="이메일"
       />
       
       <Text style={{fontSize: 18}}>사용하실 PW를 입력해주세요.</Text>
       <TextInput
-        style={[styles.input, { marginBottom: 30 }]}
+        style={[styles.input, { marginBottom: 5 }]}
         value={pw}
         onChangeText={(text) => setPw(text)}
         placeholder="비밀번호"
         secureTextEntry={true}
       />
+      <Text style={{fontSize: 12, marginBottom:25, marginLeft:8,color:"gray"}}>비밀번호는 최소 6자 이상</Text>
 
-      <Text style={{fontSize: 18}}>전화번호를 입력해주세요.</Text>
+      <Text style={{fontSize: 18}}>닉네임을 입력해주세요.</Text>
       <TextInput
         style={[styles.input, { marginBottom: 30 }]}
-        value={num}
-        onChangeText={(text) => setNum(text)}
-        placeholder="전화번호"
-        keyboardType="number-pad"
+        value={nick}
+        onChangeText={(text) => setNick(text)}
+        placeholder="닉네임"
       />
 
       <Text style={{fontSize: 18}}>나이를 입력해주세요.</Text>
