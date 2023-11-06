@@ -1,17 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Text, View, StyleSheet, TextInput, Alert,TouchableOpacity, Image, Pressable} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { WebView } from 'react-native-webview';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
+import { signInWithEmailAndPassword, getAuth, onAuthStateChanged } from 'firebase/auth';
+import { ref, get } from 'firebase/database';
+import { db } from './firebaseConfig';
+
 
 export default function Login({route}) {
   const [id, setId] = useState('');
   const [pw, setPw] = useState('');
+  const [nick, setNick] = useState('');
   const navigation = useNavigation();
   const [loginStatus, setLoginStatus] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageUrl, setImageUrl] = useState('');
+
+  useEffect(() => {
+    const auth = getAuth();
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // 사용자가 로그인한 경우
+        setLoginStatus(false);
+
+        // 사용자의 uid로 데이터베이스에서 닉네임을 가져옴
+        const userRef = ref(db, 'users/' + user.uid);
+        try {
+          const snapshot = await get(userRef);
+          if (snapshot.exists()) {
+            const userData = snapshot.val();
+            setNick(userData.nick);
+          }
+        } catch (error) {
+          console.error('Error getting user data:', error);
+        }
+      }
+    });
+  }, []);
 
 
   const logout=()=>{
@@ -30,17 +57,23 @@ export default function Login({route}) {
   }
 
   const handleLogin = () => {
-    if (id !== 'a') {
-      Alert.alert('아이디가 올바르지 않습니다.');
-      return;
-    } else if (pw !== 'a') {
-      Alert.alert('비밀번호가 올바르지 않습니다.');
+    if (!id || !pw) {
+      Alert.alert('오류', 'ID와 비밀번호를 입력하세요.');
       return;
     }
   
-    // 로그인 성공하면 로그인 상태를 변경
-    setLoginStatus(false);
+    // Firebase를 사용하여 사용자 인증
+    const auth = getAuth();
+    signInWithEmailAndPassword(auth, id, pw, nick)
+      .then(() => {
+        // 성공적으로 로그인
+        setLoginStatus(false);
+      })
+      .catch((error) => {
+        Alert.alert('오류', '아이디 또는 비밀번호가 올바르지 않습니다.');
+      });
   };
+  
 
   const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
 
@@ -195,7 +228,7 @@ const handleImageDelete = () => {// 이미지 삭제
         </Pressable>
         </View>
         <View style={styles.profile}>
-        <Text style={styles.text}>{id}님 환영합니다!</Text>
+        <Text style={styles.text}>{nick}님 환영합니다!</Text>
         </View>
         </View>
         <View style={styles.underline} />
