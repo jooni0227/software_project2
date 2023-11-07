@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Alert,  } from 'react-native';
+import { StackActions } from '@react-navigation/native';
 import { CheckBox } from 'react-native-elements';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { ref, set } from 'firebase/database';
@@ -40,7 +41,10 @@ export default function SignUp({ navigation }) {
           '회원 가입이 완료되었습니다',
           '가입을 축하드립니다! 다시 로그인하세요.',
           [
-            { text: '확인', onPress: () => navigation.navigate('Login') },
+            { text: '확인', onPress: () => {
+                navigation.dispatch(StackActions.popToTop());
+              },
+            }
           ]
         );
       })
