@@ -4,7 +4,16 @@ import { WebView } from 'react-native-webview';
 import { TouchableOpacity, StyleSheet, Text, View, ScrollView, Dimensions } from "react-native";
 import { CheckBox } from 'react-native-elements';
 
-function VoteScreen() {
+function AfterVote(){
+  return (
+    <View style={styles.container1}>
+      <Text style={styles.text1}>{'\n'}* 투표는 3문항으로 구성됩니다.</Text>
+      </View>
+  );
+}
+
+
+function VoteScreen({setShow}) {
   const [selectedItem, setSelectedItem] = useState('');
   const [selectedItem2, setSelectedItem2] = useState('');
   const [selectedItem3, setSelectedItem3] = useState('');
@@ -161,7 +170,7 @@ function VoteScreen() {
         />
       </ScrollView>
       </View>
-      <TouchableOpacity style={styles.login}>
+      <TouchableOpacity style={styles.login} onPress={() => setShow('AfterVote')}>
           <Text style={{ color: 'white', fontSize: 16, }}>제출하기</Text>
         </TouchableOpacity>
     </View>
@@ -169,7 +178,7 @@ function VoteScreen() {
 }
 
 export default function Vote({ navigation }) {
-  const [show, setShow] = useState(true);
+  const [show, setShow] = useState('vote');
 
   const handleButtonClick = () => {
     setShow(false);
@@ -204,7 +213,7 @@ export default function Vote({ navigation }) {
 
   return (
     <View style={styles.container1}>
-      {show ? (
+      {show === 'vote' ? (
         <>
       <View style={styles.topContainer1}>
         <WebView
@@ -212,14 +221,16 @@ export default function Vote({ navigation }) {
         />
       </View>
       <Text style={styles.text1}>{'\n'}* 투표는 3문항으로 구성됩니다.</Text>
-      <TouchableOpacity onPress={handleButtonClick}> 
+      <TouchableOpacity onPress={() => setShow('voting')}> 
         <View style={styles.vote1}>
         <Text style={{ color: 'white', fontSize: 22 }}>투표시작</Text>
         </View>
       </TouchableOpacity>
     </>
-      ):(
-        <VoteScreen />
+      ) : show === 'voting' ? (
+        <VoteScreen setShow={setShow}/>
+      ) : (
+      <AfterVote/>
       )}
       </View>
   );
