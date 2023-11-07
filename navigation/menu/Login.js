@@ -21,10 +21,6 @@ export default function Login({route}) {
   useEffect(() => {
     const auth = getAuth();
     onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        // 사용자가 로그인한 경우
-        setLoginStatus(false);
-
         // 사용자의 uid로 데이터베이스에서 닉네임을 가져옴
         const userRef = ref(db, 'users/' + user.uid);
         try {
@@ -36,7 +32,6 @@ export default function Login({route}) {
         } catch (error) {
           console.error('Error getting user data:', error);
         }
-      }
     });
   }, []);
 
