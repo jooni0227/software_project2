@@ -5,14 +5,13 @@ import SignUp from './menu/SignUp';
 import Home from './menu/Home';
 import Vote from './menu/Vote';
 import TabContainer from './TabContainer';
-import Vote2 from './menu/Vote2';
 
 const login = "Login";
-const signUp = "SignUp"; // 이 부분을 수정하세요
+const signUp = "SignUp"; 
 const home = "Home";
 const vote = "Vote";
 const tabmenu = "TabContainer";
-const vote2 = "Vote2";
+
 const Stack = createNativeStackNavigator();
 
 export default function StackContainer() {
@@ -24,7 +23,7 @@ export default function StackContainer() {
       <Stack.Screen name={signUp} component={SignUp} options={{}} />
       <Stack.Screen name={home} component={Home} options={{}} />
       <Stack.Screen name={vote} component={Vote} options={{}} />
-      <Stack.Screen name={vote2} component={Vote2} options={{headerShown: true}}/>
+
     </Stack.Navigator>
   );
 }
