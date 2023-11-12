@@ -1,22 +1,119 @@
 import { useState, useEffect } from "react";
 import React from 'react';
 import { WebView } from 'react-native-webview';
-import { TouchableOpacity, StyleSheet, Text, View, ScrollView, Dimensions } from "react-native";
+import { TouchableOpacity, StyleSheet, Text, View, ScrollView, Alert} from "react-native";
 import { CheckBox } from 'react-native-elements';
+import { ref, get, child, getDatabase, update } from 'firebase/database';
+import { db,auth } from './firebaseConfig';
+import { PieChart } from 'react-native-chart-kit';
 
-function AfterVote(){
+
+function AfterVote({ chartData }) {
+  const getVoteCount = (itemName) => {
+    return chartData.filter((vote) => vote === itemName).length || 0;
+  };
   return (
     <View style={styles.container1}>
-      <Text style={styles.text1}>{'\n'}* 투표는 3문항으로 구성됩니다.</Text>
+
+      {/* 차트 */}
+      <View style={styles.chartContainer}>
+        <Text style={styles.chartTitle}>투표 결과 차트</Text>
+        <PieChart
+          data={[
+            {
+              name: 'Knit',
+              population: getVoteCount('knit'),
+              color: '#FF6384',
+              legendFontColor: '#7F7F7F',
+              legendFontSize: 15,
+            },
+            {
+              name: 'Cardigan',
+              population: getVoteCount('cardigan'),
+              color: '#36A2EB',
+              legendFontColor: '#7F7F7F',
+              legendFontSize: 15,
+            },
+            
+            // ... 추가적으로 필요한 데이터를 추가
+          ]}
+          width={350}
+          height={220}
+          chartConfig={{
+            backgroundGradientFrom: '#F5A9A9',
+            backgroundGradientTo: '#F5A9A9',
+            color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+          }}
+          accessor="population"
+          backgroundColor="transparent"
+          paddingLeft="15"
+          absolute
+        />
       </View>
+    </View>
   );
 }
 
 
-function VoteScreen({setShow}) {
+function VoteScreen({setShow, onChartDataChange,chartData}) {
   const [selectedItem, setSelectedItem] = useState('');
   const [selectedItem2, setSelectedItem2] = useState('');
   const [selectedItem3, setSelectedItem3] = useState('');
+
+  useEffect(() => {
+    const fetchVoteData = async () => {
+      // 모든 사용자의 투표 데이터 가져오기
+      const usersRef = ref(db, 'users');
+      const usersSnapshot = await get(usersRef);
+      console.log(usersRef, usersSnapshot);
+      const allUsersVoteData = [];
+    
+      usersSnapshot.forEach((userSnapshot) => {
+        const userVoteData = userSnapshot.val()?.vote;
+        if (userVoteData && userVoteData.top) {
+          allUsersVoteData.push(userVoteData.top);
+          console.log("탑",allUsersVoteData)
+
+        }
+      });
+    
+      onChartDataChange(allUsersVoteData);
+
+      
+    };
+    
+    
+
+    fetchVoteData();
+  }, [chartData]);
+
+  const handleVoteSubmit = () => {
+    const user = auth.currentUser;
+    if (!user) {
+      Alert.alert('오류', '사용자 인증 실패.');
+      return;
+    }
+    const newChartData = [...chartData, selectedItem, selectedItem2, selectedItem3];
+    onChartDataChange(newChartData);
+
+    const userId = user.uid;
+
+    // Firebase에서 사용자 데이터 업데이트
+    const userRef = ref(db, `users/${userId}`);
+    update(userRef, {
+      vote: {
+        top: selectedItem,
+        bottom: selectedItem2,
+        jacket: selectedItem3,
+      },
+    });
+
+    // 사용자에게 투표 제출 성공 메시지 표시
+    Alert.alert('성공', '투표가 성공적으로 제출되었습니다.');
+
+    // show 상태를 AfterVote로 설정
+    setShow('AfterVote');
+  };
 
   return (
     <View style={styles.container}>
@@ -170,7 +267,7 @@ function VoteScreen({setShow}) {
         />
       </ScrollView>
       </View>
-      <TouchableOpacity style={styles.login} onPress={() => setShow('AfterVote')}>
+      <TouchableOpacity style={styles.login} onPress={handleVoteSubmit}>
           <Text style={{ color: 'white', fontSize: 16, }}>제출하기</Text>
         </TouchableOpacity>
     </View>
@@ -179,9 +276,12 @@ function VoteScreen({setShow}) {
 
 export default function Vote({ navigation }) {
   const [show, setShow] = useState('vote');
-
+  const [chartData, setChartData] = useState([]);
   const handleButtonClick = () => {
     setShow(false);
+  };
+  const handleChartDataChange = (newChartData) => {
+    setChartData(newChartData);
   };
 
   const renderFontHtml = () => {
@@ -228,9 +328,9 @@ export default function Vote({ navigation }) {
       </TouchableOpacity>
     </>
       ) : show === 'voting' ? (
-        <VoteScreen setShow={setShow}/>
+        <VoteScreen setShow={setShow} onChartDataChange={handleChartDataChange} chartData={chartData} />
       ) : (
-      <AfterVote/>
+        <AfterVote chartData={chartData} />
       )}
       </View>
   );
