@@ -8,29 +8,68 @@ import { db,auth } from './firebaseConfig';
 import { PieChart } from 'react-native-chart-kit';
 
 
-function AfterVote({ chartData }) {
-  const getVoteCount = (itemName) => {
-    return chartData.filter((vote) => vote === itemName).length || 0;
+function AfterVote({topChartData, bottomChartData, jacketChartData }) {
+  
+  const getVoteCount = (itemName, data = []) => {
+    console.log(data);
+    if (data && data.length > 0) {
+      // 정확한 아이템명을 비교하기 위해 정규표현식을 사용합니다.
+      const regex = new RegExp(itemName, 'g');
+      const count = (data.join('').match(regex) || []).length;
+      return count;
+    } else {
+      return 0;
+    }
   };
+  
+  
+  //console.log(topChartData);
+  //console.log(bottomChartData);
+  //console.log(jacketChartData);
   return (
     <View style={styles.container1}>
 
       {/* 차트 */}
-      <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>투표 결과 차트</Text>
+      <ScrollView style={styles.chartContainer}>
+        <Text style={{fontSize:22,marginLeft:150, marginTop:20, }}>투표 결과</Text>
+        {topChartData && topChartData.length > 0 && (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{fontSize:22,marginLeft:-275, marginTop:30}}>상의</Text>
+        <View style={{ borderWidth: 2, borderColor: 'white', borderRadius: 8, padding: 10 ,width:320, height:240, marginTop:10 }}>
         <PieChart
           data={[
             {
-              name: 'Knit',
-              population: getVoteCount('knit'),
-              color: '#FF6384',
+              name: '니트',
+              population: getVoteCount('knit',topChartData),
+              color: 'yellow',
               legendFontColor: '#7F7F7F',
               legendFontSize: 15,
             },
             {
-              name: 'Cardigan',
-              population: getVoteCount('cardigan'),
+              name: '가디건',
+              population: getVoteCount('cardigan',topChartData),
               color: '#36A2EB',
+              legendFontColor: '#7F7F7F',
+              legendFontSize: 15,
+            },
+            {
+              name: '반팔',
+              population: getVoteCount('sSleeve',topChartData),
+              color: 'blue',
+              legendFontColor: '#7F7F7F',
+              legendFontSize: 15,
+            },
+            {
+              name: '긴팔',
+              population: getVoteCount('lSleeve',topChartData),
+              color: 'red',
+              legendFontColor: '#7F7F7F',
+              legendFontSize: 15,
+            },
+            {
+              name: '목티',
+              population: getVoteCount('necks',topChartData),
+              color: 'green',
               legendFontColor: '#7F7F7F',
               legendFontSize: 15,
             },
@@ -46,16 +85,119 @@ function AfterVote({ chartData }) {
           }}
           accessor="population"
           backgroundColor="transparent"
-          paddingLeft="15"
+          paddingLeft="10"
           absolute
         />
-      </View>
+        </View>
+        </View>
+        )}
+        {bottomChartData && bottomChartData.length > 0 && (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{fontSize:22,marginLeft:-275, marginTop:45}}>하의</Text>
+        <View style={{ borderWidth: 2, borderColor: 'white', borderRadius: 8, padding: 10 ,width:320, height:240, marginTop:10 }}>
+        <PieChart
+          data={[
+            {
+              name: '반바지',
+              population: getVoteCount('shorts',bottomChartData),
+              color: 'yellow',
+              legendFontColor: '#7F7F7F',
+              legendFontSize: 15,
+            },
+            {
+              name: '긴바지',
+              population: getVoteCount('pants',bottomChartData),
+              color: '#36A2EB',
+              legendFontColor: '#7F7F7F',
+              legendFontSize: 15,
+            },
+            {
+              name: '슬랙스',
+              population: getVoteCount('slacks',bottomChartData),
+              color: 'blue',
+              legendFontColor: '#7F7F7F',
+              legendFontSize: 15,
+            },
+            {
+              name: '청바지',
+              population: getVoteCount('bluejeans',bottomChartData),
+              color: 'red',
+              legendFontColor: '#7F7F7F',
+              legendFontSize: 15,
+            },
+          ]}
+          width={350}
+          height={220}
+          chartConfig={{
+            backgroundGradientFrom: '#F5A9A9',
+            backgroundGradientTo: '#F5A9A9',
+            color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+          }}
+          accessor="population"
+          backgroundColor="transparent"
+          paddingLeft="10"
+          absolute
+        />
+        </View>
+        </View>
+        )}
+        {jacketChartData && jacketChartData.length > 0 && (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{fontSize:22,marginLeft:-275, marginTop:45, }}>재킷</Text>
+        <View style={{ borderWidth: 2, borderColor: 'white', borderRadius: 8, padding: 10 ,width:320, height:240, marginTop:10 }}>
+        <PieChart
+          data={[
+            {
+              name: '바람막이',
+              population: getVoteCount('jacket',jacketChartData),
+              color: 'yellow',
+              legendFontColor: '#7F7F7F',
+              legendFontSize: 15,
+            },
+            {
+              name: '코트',
+              population: getVoteCount('coat',jacketChartData),
+              color: '#36A2EB',
+              legendFontColor: '#7F7F7F',
+              legendFontSize: 15,
+            },
+            {
+              name: '패딩',
+              population: getVoteCount('padding',jacketChartData),
+              color: 'blue',
+              legendFontColor: '#7F7F7F',
+              legendFontSize: 15,
+            },
+            {
+              name: '조끼',
+              population: getVoteCount('vest',jacketChartData),
+              color: 'red',
+              legendFontColor: '#7F7F7F',
+              legendFontSize: 15,
+            },
+          ]}
+          width={350}
+          height={220}
+          chartConfig={{
+            backgroundGradientFrom: '#F5A9A9',
+            backgroundGradientTo: '#F5A9A9',
+            color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+          }}
+          accessor="population"
+          backgroundColor="transparent"
+          paddingLeft="5"
+          absolute
+        />
+        </View>
+        </View>
+        )}
+      </ScrollView>
     </View>
   );
 }
 
 
-function VoteScreen({setShow, onChartDataChange,chartData}) {
+function VoteScreen({setShow, onTopChartDataChange, onBottomChartDataChange, onJacketChartDataChange, setTopChartData,setBottomChartData,setJacketChartData}) {
   const [selectedItem, setSelectedItem] = useState('');
   const [selectedItem2, setSelectedItem2] = useState('');
   const [selectedItem3, setSelectedItem3] = useState('');
@@ -65,53 +207,73 @@ function VoteScreen({setShow, onChartDataChange,chartData}) {
       // 모든 사용자의 투표 데이터 가져오기
       const usersRef = ref(db, 'users');
       const usersSnapshot = await get(usersRef);
-      console.log(usersRef, usersSnapshot);
-      const allUsersVoteData = [];
+      //console.log(usersRef, usersSnapshot);
+      //const allUsersVoteData =[];
+      const TopUsersVoteData = [];
+      const BottomUsersVoteData = [];
+      const JacketUsersVoteData = [];
     
       usersSnapshot.forEach((userSnapshot) => {
         const userVoteData = userSnapshot.val()?.vote;
+        //allUsersVoteData.push(userVoteData);
+        //console.log("전부",allUsersVoteData)
+        
         if (userVoteData && userVoteData.top) {
-          allUsersVoteData.push(userVoteData.top);
-          console.log("탑",allUsersVoteData)
-
+          TopUsersVoteData.push(userVoteData.top);
+          //console.log("탑",TopUsersVoteData)
+        }
+        if (userVoteData && userVoteData.bottom) {
+          BottomUsersVoteData.push(userVoteData.bottom);
+          //console.log("바텀",BottomUsersVoteData)
+        }
+        if (userVoteData && userVoteData.jacket) {
+          JacketUsersVoteData.push(userVoteData.jacket);
+          //console.log("재킷",JacketUsersVoteData)
         }
       });
-    
-      onChartDataChange(allUsersVoteData);
+      onTopChartDataChange(TopUsersVoteData);
+      onBottomChartDataChange(BottomUsersVoteData);
+      onJacketChartDataChange(JacketUsersVoteData);
 
+      setTopChartData(TopUsersVoteData);
+      setBottomChartData(BottomUsersVoteData);
+      setJacketChartData(JacketUsersVoteData);
       
+      console.log('LOG 전체 데이터', TopUsersVoteData, BottomUsersVoteData, JacketUsersVoteData);
     };
-    
-    
 
     fetchVoteData();
-  }, [chartData]);
+  }, []);
 
-  const handleVoteSubmit = () => {
+  const handleVoteSubmit = async () => {
     const user = auth.currentUser;
     if (!user) {
       Alert.alert('오류', '사용자 인증 실패.');
       return;
     }
-    const newChartData = [...chartData, selectedItem, selectedItem2, selectedItem3];
-    onChartDataChange(newChartData);
+
+    onTopChartDataChange(selectedItem);
+    onBottomChartDataChange(selectedItem2);
+    onJacketChartDataChange(selectedItem3);
 
     const userId = user.uid;
 
     // Firebase에서 사용자 데이터 업데이트
     const userRef = ref(db, `users/${userId}`);
+    const userSnapshot = await get(userRef);
+    let currentCount = userSnapshot.val()?.vote?.count || 0;
+    currentCount++;
+
     update(userRef, {
       vote: {
         top: selectedItem,
         bottom: selectedItem2,
         jacket: selectedItem3,
+        count: currentCount,
       },
     });
 
-    // 사용자에게 투표 제출 성공 메시지 표시
     Alert.alert('성공', '투표가 성공적으로 제출되었습니다.');
-
-    // show 상태를 AfterVote로 설정
     setShow('AfterVote');
   };
 
@@ -276,13 +438,25 @@ function VoteScreen({setShow, onChartDataChange,chartData}) {
 
 export default function Vote({ navigation }) {
   const [show, setShow] = useState('vote');
-  const [chartData, setChartData] = useState([]);
+  const [topChartData, setTopChartData] = useState([]);
+  const [bottomChartData, setBottomChartData] = useState([]);
+  const [jacketChartData, setJacketChartData] = useState([]);
+
   const handleButtonClick = () => {
     setShow(false);
   };
-  const handleChartDataChange = (newChartData) => {
-    setChartData(newChartData);
+  const handleTopChartDataChange = (newChartData) => {
+    setTopChartData([...topChartData, ...newChartData]);
   };
+  
+  const handleBottomChartDataChange = (newChartData) => {
+    setBottomChartData([...bottomChartData, ...newChartData]);
+  };
+  
+  const handleJacketChartDataChange = (newChartData) => {
+    setJacketChartData([...jacketChartData, ...newChartData]);
+  };
+  
 
   const renderFontHtml = () => {
     return `
@@ -328,9 +502,12 @@ export default function Vote({ navigation }) {
       </TouchableOpacity>
     </>
       ) : show === 'voting' ? (
-        <VoteScreen setShow={setShow} onChartDataChange={handleChartDataChange} chartData={chartData} />
+        <VoteScreen setShow={setShow} onTopChartDataChange={handleTopChartDataChange} onBottomChartDataChange={handleBottomChartDataChange} onJacketChartDataChange={handleJacketChartDataChange} setTopChartData={setTopChartData} // 추가: state를 업데이트하기 위한 함수
+        setBottomChartData={setBottomChartData} // 추가: state를 업데이트하기 위한 함수
+        setJacketChartData={setJacketChartData} // 추가: state를 업데이트하기 위한 함수
+      /> 
       ) : (
-        <AfterVote chartData={chartData} />
+        <AfterVote topChartData={topChartData} bottomChartData={bottomChartData} jacketChartData={jacketChartData}/>
       )}
       </View>
   );
@@ -341,8 +518,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5A9A9',
   },
+  container2: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
   topContainer1: {
-    height: 230, // 위쪽 영역의 높이 비율을 3으로 설정
+    height: 230, 
     borderWidth:1,
     borderColor:'#F5A9A9'
   },  
@@ -369,7 +550,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5A9A9',
   },
   topContainer: {
-    flex: 4, // 위쪽 영역의 높이 비율을 3으로 설정
+    flex: 4, 
     borderWidth:1,
     borderColor:'#F5A9A9'
   },  
