@@ -5,8 +5,9 @@ import { WebView } from 'react-native-webview';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import { signInWithEmailAndPassword, getAuth, onAuthStateChanged } from 'firebase/auth';
-import { ref, get } from 'firebase/database';
+import { ref, get, set } from 'firebase/database';
 import { db } from './firebaseConfig';
+import { onValue } from "firebase/database";
 
 
 export default function Login({route}) {
@@ -17,6 +18,11 @@ export default function Login({route}) {
   const [loginStatus, setLoginStatus] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageUrl, setImageUrl] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState(null); 
+  const [voteCount, setVoteCount] = useState(0);
+  const now = new Date();
+  const FirstDay = now.getDate() === 1;
+
 
   useEffect(() => {
     const auth = getAuth();
@@ -34,7 +40,77 @@ export default function Login({route}) {
         }
     });
   }, []);
+  
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userId = user.uid;
+        const userVoteRef = ref(db, 'users/' + userId + '/vote/count');
+  
+        // 사용자의 투표 횟수를 실시간으로 감지
+        const unsubscribeVote = onValue(userVoteRef, (snapshot) => {
+          if (snapshot.exists()) {
+            const voteData = snapshot.val();
+            setVoteCount(voteData);
+          }
+        });
+        // 컴포넌트가 언마운트될 때 cleanup 함수 실행
+        return () => {
+          unsubscribeVote();
+        };
+      }
+    }, [db]); // db를 의존성 배열에 추가
+  }, []); 
+ 
 
+  //응모하기 버튼
+  const selectRandomUser = async () => {
+    const usersRef = ref(db, 'users/');
+  
+    // 현재 사용자의 ID
+    const auth = getAuth();
+    const userId = auth.currentUser.uid;
+  
+    // 사용자의 현재 투표 횟수
+    const userVoteRef = ref(db, 'users/' + userId + '/vote/count');
+    const voteSnapshot = await get(userVoteRef);
+    const userVoteCount = voteSnapshot.exists() ? voteSnapshot.val() : 0;
+  
+    if (userVoteCount >= 15) {
+      const updatedVoteCount = userVoteCount - 1;
+      try {
+        await set(userVoteRef, updatedVoteCount);
+        setVoteCount(updatedVoteCount);
+        Alert.alert('응모 완료', '투표 횟수가 차감되었습니다.');
+      } catch (error) {
+        console.error('투표 횟수 업데이트 실패:', error);
+      }
+    } else {
+      Alert.alert('투표 횟수 부족', '이벤트에 참여하려면 최소 15회 이상의 투표 횟수가 필요합니다.');
+    }
+  };
+  
+ //당첨자 확인 버튼
+  const win = () => {
+    const usersRef = ref(db, 'users/');
+    
+    onValue(usersRef, (snapshot) => {
+      const data = snapshot.val();
+      const userData = Object.values(data); // 모든 사용자 데이터를 배열
+  
+      let selectedUsers = [];
+      for(let i = 0; i < 3; i++) {
+        const randomIndex = Math.floor(Math.random() * userData.length); 
+        const selectedUser = userData[randomIndex];
+        const selectedUserNick = selectedUser.nick; 
+        selectedUsers.push(selectedUserNick);
+        userData.splice(randomIndex, 1); // 이미 선택된 사용자를 제거하여 중복 선택 방지
+      }
+      setSelectedUserId(selectedUsers.join(', ')); 
+      Alert.alert('당첨자 확인', `당첨자 닉네임: ${selectedUsers.join(', ')}`);
+    });
+  };
 
   const logout=()=>{
     Alert.alert("로그아웃", "로그아웃 하시겠습니까?", [
@@ -51,24 +127,38 @@ export default function Login({route}) {
     
   }
 
-  const handleLogin = () => {
-    if (!id || !pw) {
-      Alert.alert('오류', 'ID와 비밀번호를 입력하세요.');
-      return;
-    }
-  
-    // Firebase를 사용하여 사용자 인증
-    const auth = getAuth();
-    signInWithEmailAndPassword(auth, id, pw, nick)
-      .then(() => {
-        // 성공적으로 로그인
-        setLoginStatus(false);
-      })
-      .catch((error) => {
-        Alert.alert('오류', '아이디 또는 비밀번호가 올바르지 않습니다.');
-      });
-  };
-  
+const handleLogin = () => {
+  if (!id || !pw) {
+    Alert.alert('오류', 'ID와 비밀번호를 입력하세요.');
+    return;
+  }
+
+  // Firebase를 사용하여 사용자 인증
+  const auth = getAuth();
+  signInWithEmailAndPassword(auth, id, pw, nick)
+    .then(async () => {
+      // 성공적으로 로그인
+      setLoginStatus(false);
+      const userId = auth.currentUser.uid;
+      const userVoteRef = ref(db, 'users/' + userId + '/vote/count');
+      try {
+        const voteSnapshot = await get(userVoteRef);
+        if (voteSnapshot.exists()) {
+          const voteData = voteSnapshot.val();
+          setVoteCount(voteData);
+        } else {
+          // 투표 데이터 없는 경우 초기값 0
+          await set(userVoteRef, 0);
+          setVoteCount(0);
+        }
+      } catch (error) {
+        console.error('투표 데이터를 가져오는 중 오류 발생:', error);
+      }
+    })
+    .catch((error) => {
+      Alert.alert('오류', '아이디 또는 비밀번호가 올바르지 않습니다.');
+    });
+};
 
   const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
 
@@ -88,7 +178,7 @@ export default function Login({route}) {
       quality: 1,
     });
 
-    if (!result.cancelled) {
+    if (!result.canceled) {
       const localUri = result.assets[0].uri;
       setSelectedImage(localUri);
   
@@ -116,7 +206,6 @@ export default function Login({route}) {
 
 
 const handleImageChange = () => {
-  // 이미지 바꾸기 알림창 구현
   Alert.alert(
     '이미지 바꾸기',
     '원하는 작업을 선택해주세요.',
@@ -139,7 +228,7 @@ const handleImageChange = () => {
   );
 };
 
-const handleImageDelete = () => {// 이미지 삭제 
+const handleImageDelete = () => {// 이미지 삭제
   setSelectedImage(null);
 };
 
@@ -227,17 +316,17 @@ const handleImageDelete = () => {// 이미지 삭제
         </View>
         </View>
         <View style={styles.underline} />
-        <Text style={styles.text1}>투표횟수 회</Text>
+        <Text style={styles.text1}>투표횟수 {voteCount}회</Text>
         <View style={styles.underline} />
         <Text style={styles.text2}>* 이벤트 *</Text>
         <Text style={styles.text3}>오늘 뭐 입지? 앱을 이용해주셔서 감사합니다.{'\n'}저희는 기프티콘 제공 이벤트를 진행합니다.{'\n'}매월 1일 추점을 진행하여 총 3명의 당첨자를{'\n'}발표합니다.
         </Text>
         <Text style={styles.text2}>* 조건 *</Text>
         <Text style={styles.text3}>투표횟수가 20회 이상인 분들만 응모 가능합니다.{'\n'}응모하신 후 투표횟수는 20회가 차감됩니다.</Text>
-        <TouchableOpacity style={styles.event} >
+        <TouchableOpacity style={styles.event} onPress={selectRandomUser} >
           <Text style={{ color: 'white', fontSize: 16 }}>응모하기</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.event2} >
+        <TouchableOpacity style={styles.event2} onPress={win}>
           <Text style={{ color: 'white', fontSize: 16 }}>당첨자 확인</Text>
         </TouchableOpacity>
         <View style={styles.underline} />
